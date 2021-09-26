@@ -1,5 +1,4 @@
 from flask import Blueprint
-
 dining_hall = Blueprint("kitchen", "__name__")
 
 
