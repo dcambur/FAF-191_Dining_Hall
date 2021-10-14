@@ -1,13 +1,13 @@
 # FAF-191_Dining_Hall
 
-## Build:
+## Build
 
 ```bash
-docker image build -t docker-dining-hall .
+docker image build -t dining-hall .
 ```
 
-## Run:
+## Run
 
 ```bash
-docker run -p 5001:5000 --name dining-hall -d docker-dining-hall
+docker run -p 80:5000 --name dining-hall -d dining-hall
 ```
