@@ -1,10 +1,9 @@
-import threading, queue
+import threading, queue, sys
 import config
 import table
 from waiter import Waiter
 from flask import Flask, request
 
-#from distributor import app
 
 # init
 orders = []
