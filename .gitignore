@@ -105,10 +105,9 @@ celerybeat.pid
 .env
 .venv
 env/
-../FAF-191_Kitchen/venv/
-ENV/
 env.bak/
 venv.bak/
+venv
 
 # Spyder project settings
 .spyderproject
@@ -129,3 +128,4 @@ dmypy.json
 .pyre/
 
 .idea
+.vscode
