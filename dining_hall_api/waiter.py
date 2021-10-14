@@ -57,5 +57,5 @@ class Waiter(threading.Thread):
                     print(f"Order created: {generated_order.to_dict()}")
                     self.orders.append(generated_order)
                     table.state = TableState.WAITING_TO_BE_SERVED
-                    requests.post(config.KITCHEN_URL, json=json.dumps(generated_order.to_dict()))
+                    requests.post(config.KITCHEN_URL, data=json.dumps(generated_order.to_dict()), headers={"Content-Type": "application/json"})
                     print(f"Order sent to kitchen: {generated_order.to_dict()}")
