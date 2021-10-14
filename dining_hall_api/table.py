@@ -43,7 +43,7 @@ class Table:
         menu_max_wait = max(
             [item["preparation-time"] for item in menu_items]) * 1.3
 
-        priority = random.randrange(0, 5)
+        priority = random.randrange(1, 5)
         order_data = OrderData(self, waiter_id, menu_ids, priority, menu_max_wait)
 
         return order_data
