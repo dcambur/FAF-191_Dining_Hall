@@ -30,14 +30,19 @@ class Waiter(threading.Thread):
                 self.take_order()
 
     def _serve_order(self, *args, **kwargs):
-        # slowdown waiter's moves a bit
         time.sleep(random.randint(2, 4) * config.TIME_UNIT)
         order = args[0]
-        print(f"Order received from kitchen: {order}")
         table_id = order["table_id"]
         order_id = order["order_id"]
-        print(self.orders.pop(order_id).to_dict())
-        self.tables[table_id].state = TableState.FREE
+        waiter_id = order["waiter_id"]
+        if waiter_id == self.id:
+            print(f"Order received from kitchen: {order}")
+            finished_order = self.orders.pop(order_id)
+            print(f"Order removed from order list: {finished_order.to_dict()}")
+            self.tables[table_id].state = TableState.FREE
+            print(f"Order served: {order_id}, table: {table_id}, waiter: {self.id}")
+        else:
+            print(f"Wrong order received, waiter in order: {waiter_id}, mine id is: {self.id}")
 
     def serve_order(self, *args, **kwargs):
             self.on_thread(self._serve_order, *args, **kwargs)

@@ -1,3 +1,4 @@
 TABLES = 10
 WAITERS = 6
-KITCHEN_URL = "https://google.com"
+TIME_UNIT = 1
+KITCHEN_URL = "http://kitchen:5000"
