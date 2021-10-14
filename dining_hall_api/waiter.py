@@ -1,4 +1,4 @@
-import threading, queue, itertools, time, requests, json
+import threading, queue, itertools, time, requests, json, random
 import config
 from table import TableState
 
@@ -29,23 +29,28 @@ class Waiter(threading.Thread):
             except queue.Empty:
                 self.take_order()
 
-    def _serve_order(self):
-        # put the real code here
-        pass
+    def _serve_order(self, *args, **kwargs):
+        # slowdown waiter's moves a bit
+        time.sleep(random.randint(2, 4) * config.TIME_UNIT)
+        order = args[0]
+        print(f"Order received from kitchen: {order}")
+        table_id = order["table_id"]
+        order_id = order["order_id"]
+        print(self.orders.pop(order_id).to_dict())
+        self.tables[table_id].state = TableState.FREE
 
-    def serve_order(self):
-        self.on_thread(self._serve_order)
+    def serve_order(self, *args, **kwargs):
+            self.on_thread(self._serve_order, *args, **kwargs)
 
     def take_order(self):
         for table in self.tables:
-            # maybe removed
-            time.sleep(0.2)
+            time.sleep(random.randint(2, 4) * config.TIME_UNIT)
             with table_locks[table.id]:
-                #print(f"waiter id: {self.id}, table id: {table.id}")
                 if table.state == TableState.FREE:
                     table.state = TableState.WAITING_TO_MAKE
                     generated_order = table.generate_order(self.id)
+                    print(f"Order created: {generated_order.to_dict()}")
                     self.orders.append(generated_order)
-                    print(generated_order.to_dict())
                     table.state = TableState.WAITING_TO_BE_SERVED
                     requests.post(config.KITCHEN_URL, json=json.dumps(generated_order.to_dict()))
+                    print(f"Order sent to kitchen: {generated_order.to_dict()}")

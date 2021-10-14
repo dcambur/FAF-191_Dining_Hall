@@ -17,9 +17,11 @@ app = Flask(__name__)
 def distributor():
     if request:
         r = request.get_json(force=True)
-
         print(r)
-    print(waiters)
+        if r["waiter_id"]:
+            waiter_id = r["waiter_id"]
+            waiters[waiter_id].serve_order(r)
+        
     return "Ok"
 
 if __name__ == "__main__":
