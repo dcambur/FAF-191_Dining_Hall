@@ -1,0 +1,3 @@
+TABLES = 10
+WAITERS = 6
+KITCHEN_URL = "http://kitchen:5000"
