@@ -8,6 +8,8 @@ docker image build -t dining-hall .
 
 ## Run
 
+Before running dining-hall make sure to start kitchen first.
+
 ```bash
 docker run -p 80:5000 --name dining-hall -d dining-hall
 ```
