@@ -37,10 +37,16 @@ class Waiter(threading.Thread):
         waiter_id = order["waiter_id"]
         if waiter_id == self.id:
             print(f"Order received from kitchen: {order}")
-            finished_order = self.orders.pop(order_id)
-            print(f"Order removed from order list: {finished_order.to_dict()}")
-            self.tables[table_id].state = TableState.FREE
-            print(f"Order served: {order_id}, table: {table_id}, waiter: {self.id}")
+            # FIXME: use locks to prevent races
+            for idx, order in enumerate(self.orders):
+                if order.id == order_id:
+                    order_to_remove = idx
+                    break
+            if order_to_remove:   
+                finished_order = self.orders.pop(order_to_remove)
+                print(f"Order removed from order list: {finished_order.to_dict()}")
+                self.tables[table_id].state = TableState.FREE
+                print(f"Order served: {order_id}, table: {table_id}, waiter: {self.id}")
         else:
             print(f"Wrong order received, waiter in order: {waiter_id}, mine id is: {self.id}")
 
