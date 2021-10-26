@@ -10,6 +10,8 @@ orders = []
 tables = []
 waiters = []
 waiter_pipes = []
+rank = 0
+rank_lock = threading.Lock()
 
 app = Flask(__name__)
 
@@ -37,7 +39,7 @@ if __name__ == "__main__":
     # start waiters
     for _ in range(config.WAITERS):
         pipe = queue.Queue()
-        waiter = Waiter(pipe, tables=tables, orders=orders)
+        waiter = Waiter(pipe, rank, rank_lock, tables=tables, orders=orders)
         waiters.append(waiter)
         waiter_pipes.append(pipe)
         waiter.start()

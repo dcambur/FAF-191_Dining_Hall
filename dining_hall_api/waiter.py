@@ -1,4 +1,5 @@
 import threading, queue, itertools, time, requests, json, random
+from datetime import datetime
 import config
 from table import TableState
 
@@ -10,12 +11,14 @@ for _ in range(config.TABLES):
 class Waiter(threading.Thread):
     waiter_id = itertools.count()
 
-    def __init__(self, q, tables=[], orders=[], loop_time = 1.0/60, *args, **kwargs):
+    def __init__(self, q, rank, rank_lock, tables=[], orders=[], loop_time = 1.0/60, *args, **kwargs):
         self.q = q
         self.timeout = loop_time
         self.id = next(self.waiter_id)
         self.tables = tables
         self.orders = orders
+        self.rank = rank
+        self.rank_lock = rank_lock
         super().__init__(*args, **kwargs)
 
     def on_thread(self, function, *args, **kwargs):
@@ -47,6 +50,25 @@ class Waiter(threading.Thread):
                 print(f"Order removed from order list: {finished_order.to_dict()}")
                 self.tables[table_id].state = TableState.FREE
                 print(f"Order served: {order_id}, table: {table_id}, waiter: {self.id}")
+                order_serve_time = int(datetime.now().timestamp())
+                order_total_time = order_serve_time - finished_order["pick_up_time"]
+                order_rank = round((order_total_time / finished_order["max_wait"]), 2)
+                print(f"Order rank coefficient is: {order_rank}")
+                with self.rank_lock:
+                    self.rank = round((self.rank + order_rank)/2, 2)
+                    print(f"New global rank coefficient is: {self.rank}")
+                    if self.rank > 1.4:
+                        print("We are 0 star")
+                    elif 1.3 < self.rank < 1.4:
+                        print("We are 1 star")
+                    elif 1.2 < self.rank < 1.3:
+                        print("We are 2 stars")
+                    elif 1.1 < self.rank < 1.2:
+                        print("We are 3 stars")
+                    elif 1.0 < self.rank < 1.1:
+                        print("We are 4 stars")
+                    elif self.rank < 1.0:
+                        print("We are 5 stars")
         else:
             print(f"Wrong order received, waiter in order: {waiter_id}, mine id is: {self.id}")
 
