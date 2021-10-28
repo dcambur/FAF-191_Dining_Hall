@@ -45,7 +45,6 @@ class Waiter(threading.Thread):
                 if order.id == order_id:
                     order_to_remove = idx
                     break
-            print(f"Order to be removed: {order_to_remove}")
             if order_to_remove > -1:   
                 finished_order = self.orders.pop(order_to_remove)
                 print(f"Order removed from order list: {finished_order.to_dict()}")
