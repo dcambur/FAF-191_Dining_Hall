@@ -33,29 +33,34 @@ class Waiter(threading.Thread):
                 self.take_order()
 
     def _serve_order(self, *args, **kwargs):
-        time.sleep(random.randint(2, 4) * config.TIME_UNIT)
+        # time.sleep(random.randint(2, 4) * config.TIME_UNIT)
         order = args[0]
         table_id = order["table_id"]
         order_id = order["order_id"]
         waiter_id = order["waiter_id"]
+        order_to_remove = -1
         if waiter_id == self.id:
             print(f"Order received from kitchen: {order}")
-            # FIXME: use locks to prevent races
             for idx, order in enumerate(self.orders):
                 if order.id == order_id:
                     order_to_remove = idx
                     break
-            if order_to_remove:   
+            print(f"Order to be removed: {order_to_remove}")
+            if order_to_remove > -1:   
                 finished_order = self.orders.pop(order_to_remove)
                 print(f"Order removed from order list: {finished_order.to_dict()}")
                 self.tables[table_id].state = TableState.FREE
                 print(f"Order served: {order_id}, table: {table_id}, waiter: {self.id}")
                 order_serve_time = int(datetime.now().timestamp())
-                order_total_time = order_serve_time - finished_order["pick_up_time"]
-                order_rank = round((order_total_time / finished_order["max_wait"]), 2)
+                order_total_time = order_serve_time - finished_order.pick_up_time
+                order_rank = round((order_total_time / finished_order.max_wait), 2)
                 print(f"Order rank coefficient is: {order_rank}")
                 with self.rank_lock:
-                    self.rank = round((self.rank + order_rank)/2, 2)
+                    if self.rank == 0:
+                        print("It's only begging of the day")
+                        self.rank = order_rank
+                    else:
+                        self.rank = round((self.rank + order_rank)/2, 2)
                     print(f"New global rank coefficient is: {self.rank}")
                     if self.rank > 1.4:
                         print("We are 0 star")
@@ -70,7 +75,7 @@ class Waiter(threading.Thread):
                     elif self.rank < 1.0:
                         print("We are 5 stars")
         else:
-            print(f"Wrong order received, waiter in order: {waiter_id}, mine id is: {self.id}")
+            print(f"Wrong order received, waiter in order: {waiter_id}, my id is: {self.id}")
 
     def serve_order(self, *args, **kwargs):
             self.on_thread(self._serve_order, *args, **kwargs)
@@ -84,6 +89,6 @@ class Waiter(threading.Thread):
                     generated_order = table.generate_order(self.id)
                     print(f"Order created: {generated_order.to_dict()}")
                     self.orders.append(generated_order)
-                    table.state = TableState.WAITING_TO_BE_SERVED
                     requests.post(config.KITCHEN_URL, data=json.dumps(generated_order.to_dict()), headers={"Content-Type": "application/json"})
                     print(f"Order sent to kitchen: {generated_order.to_dict()}")
+                    table.state = TableState.WAITING_TO_BE_SERVED
