@@ -13,6 +13,7 @@ class OrderData:
         self.priority = priority
         self.max_wait = max_wait
         self.pick_up_time = int(datetime.now().timestamp())
+        self.state = OrderState.READY
 
     def to_dict(self):
         return {"order_id": self.id,
@@ -21,13 +22,20 @@ class OrderData:
                 "items": self.items,
                 "priority": self.priority,
                 "max_wait": self.max_wait,
-                "pick_up_time": self.pick_up_time}
+                "pick_up_time": self.pick_up_time,
+                "state": self.state.value}
 
 
 class TableState(Enum):
     FREE = 1
     WAITING_TO_MAKE = 2
     WAITING_TO_BE_SERVED = 3
+
+
+class OrderState(Enum):
+    READY = 1
+    PREPARED = 2
+    SERVED = 3
 
 
 class Table:
