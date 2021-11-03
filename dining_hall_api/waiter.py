@@ -11,24 +11,33 @@ class Waiter(threading.Thread):
     waiter_id = itertools.count()
 
     def __init__(self, q, tables=[], orders=[], loop_time = 1.0/60, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.q = q
         self.timeout = loop_time
         self.id = next(self.waiter_id)
         self.tables = tables
         self.orders = orders
-        super().__init__(*args, **kwargs)
         self.name = f"Waiter-{self.id}"
+        self.stop_requested = threading.Event()
+        self.exception = None
 
     def on_thread(self, function, *args, **kwargs):
         self.q.put((function, args, kwargs))
 
     def run(self):
-        while True:
-            try:
-                function, args, kwargs = self.q.get(timeout=self.timeout)
-                function(*args, **kwargs)
-            except queue.Empty:
-                self.take_order()
+        try:
+            while not self.stop_requested.wait(1):
+                try:
+                    function, args, kwargs = self.q.get(timeout=self.timeout)
+                    function(*args, **kwargs)
+                except queue.Empty:
+                    self.take_order()
+        except Exception as e:
+            self.exception = e
+
+    def stop(self):
+        # send stop event
+        self.stop_requested.set()
 
     def _serve_order(self, *args, **kwargs):
         # time.sleep(random.randint(2, 4) * config.TIME_UNIT)
