@@ -1,4 +1,4 @@
-import threading, queue
+import threading, queue, time
 from datetime import datetime
 from flask import Flask, request
 import config
@@ -34,7 +34,7 @@ def distributor():
             else:
                 rank = round((rank + order_rank)/2, 2)
             print(f"New global rank coefficient is: {rank}")
-            if rank > 1.4:
+            if rank >= 1.4:
                 print("We are 0 star")
             elif 1.3 < rank < 1.4:
                 print("We are 1 star")
@@ -52,6 +52,7 @@ def distributor():
 if __name__ == "__main__":
     # start distributor
     distributor_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port='5000', debug=True, use_reloader=False))
+    distributor_thread.daemon = True
     distributor_thread.start()
 
     # prepare tables
@@ -63,11 +64,23 @@ if __name__ == "__main__":
     for _ in range(config.WAITERS):
         pipe = queue.Queue()
         waiter = Waiter(pipe, tables=tables, orders=orders)
+        waiter.daemon = True
         waiters.append(waiter)
         waiter_pipes.append(pipe)
         waiter.start()
 
-    for w in waiters:
-        w.join()
+    try:
+        while True:
+            for t in waiters:
+                if t.exception:
+                    # thread raised an exception
+                    raise t.exception
+            time.sleep(0.2)
 
-    distributor_thread.join()
+    except Exception as e:
+        print("Exception in main thread")
+
+    finally:
+        for t in waiters:
+            # stop the threads
+            t.stop()
